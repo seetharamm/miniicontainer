@@ -1,0 +1,59 @@
+{
+  "name": "minicontainer",
+  "version": "1.0.0",
+  "description": "A Docker-like container runtime built from scratch in Node.js — supports Linux and Windows",
+  "main": "src/index.js",
+  "bin": {
+    "minicontainer": "./bin/minicontainer.js",
+    "mydocker":      "./bin/mydocker.js"
+  },
+  "scripts": {
+    "start": "node bin/minicontainer.js",
+    "test": "node test/runner.js",
+    "lint": "eslint src/ bin/",
+    "build:linux": "npm run build:linux:minicontainer && npm run build:linux:mydocker",
+    "build:windows": "npm run build:windows:minicontainer && npm run build:windows:mydocker",
+    "build:linux:minicontainer": "pkg bin/minicontainer.js --target node18-linux-x64 --output dist/minicontainer-linux-x64",
+    "build:linux:mydocker": "pkg bin/mydocker.js --target node18-linux-x64 --output dist/mydocker-linux-x64",
+    "build:windows:minicontainer": "pkg bin/minicontainer.js --target node18-win-x64 --output dist/minicontainer-win-x64.exe",
+    "build:windows:mydocker": "pkg bin/mydocker.js --target node18-win-x64 --output dist/mydocker-win-x64.exe",
+    "build:binary": "npm run build:linux && npm run build:windows"
+  },
+  "keywords": [
+    "container",
+    "docker",
+    "runtime",
+    "linux",
+    "windows",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.7",
+    "chalk": "^4.1.2",
+    "cli-progress": "^3.12.0",
+    "commander": "^11.1.0",
+    "fs-extra": "^11.2.0",
+    "js-yaml": "^4.3.2",
+    "table": "^6.8.1",
+    "tar": "^6.2.1",
+    "uuid": "^9.0.1",
+    "which": "^4.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "pkg": "^5.8.1"
+  },
+  "pkg": {
+    "scripts": [
+      "src/**/*.js"
+    ],
+    "assets": [
+      "examples/**/*"
+    ]
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

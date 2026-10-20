@@ -1,0 +1,43 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Multi-stage Containerfile for a Java REST API (Spring Boot / Quarkus / etc.)
+# Build: minicontainer build . -t myapi:1.0
+# Run:   minicontainer run -d -p 8080:8080 myapi:1.0
+# ──────────────────────────────────────────────────────────────────────────────
+
+# ── Stage 1: build the fat JAR ────────────────────────────────────────────────
+FROM eclipse-temurin:21-jdk AS builder
+
+WORKDIR /build
+
+# Copy Maven/Gradle wrapper and dependency manifests first (layer-cache friendly)
+COPY pom.xml /build/
+COPY mvnw /build/
+COPY .mvn /build/.mvn
+
+# Download dependencies (cached unless pom.xml changes)
+RUN ./mvnw dependency:go-offline -q
+
+# Copy source and build
+COPY src /build/src
+RUN ./mvnw package -DskipTests -q
+
+# ── Stage 2: minimal runtime image ───────────────────────────────────────────
+FROM eclipse-temurin:21-jre
+
+LABEL maintainer="you@example.com"
+LABEL version="1.0"
+
+WORKDIR /app
+
+# Copy only the fat JAR from the builder stage
+COPY --from=builder /build/target/*.jar /app/app.jar
+
+# Environment
+ENV JAVA_OPTS="-Xms128m -Xmx512m"
+ENV SERVER_PORT=8080
+
+EXPOSE 8080
+
+# Entrypoint
+ENTRYPOINT ["java"]
+CMD ["-jar", "/app/app.jar"]

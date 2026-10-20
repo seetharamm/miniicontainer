@@ -1,0 +1,26 @@
+# Example Containerfile for minicontainer
+# Build with: minicontainer build . -t myapp:latest
+
+FROM alpine:3.19
+
+LABEL maintainer="you@example.com"
+
+# Set working directory
+WORKDIR /app
+
+# Set environment variables
+ENV NODE_ENV=production \
+    PORT=3000
+
+# Copy application source
+COPY . /app
+
+# Install dependencies (example for a Node app baked into the image)
+RUN apk add --no-cache nodejs npm && \
+    npm install --production
+
+# Expose port
+EXPOSE 3000
+
+# Default command
+CMD ["node", "server.js"]
