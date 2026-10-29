@@ -42,6 +42,7 @@ module.exports = async function save(imageRef, opts) {
   try {
     // ── 1. Copy layer tarballs ───────────────────────────────────────────
     const layerPaths = [];  // relative paths inside the tarball
+    const diffIds    = [];
 
     const layers = record.layers || [];
     if (layers.length === 0) {
@@ -62,6 +63,8 @@ module.exports = async function save(imageRef, opts) {
       await fs.ensureDir(layerDir);
       await fs.copy(layer.file, path.join(layerDir, 'layer.tar'));
       layerPaths.push(`${shortHex}/layer.tar`);
+      diffIds.push('sha256:' + require('crypto').createHash('sha256')
+        .update(await fs.readFile(layer.file)).digest('hex'));
     }
 
     // ── 2. Write image config JSON ───────────────────────────────────────
@@ -80,7 +83,7 @@ module.exports = async function save(imageRef, opts) {
       },
       rootfs: {
         type:    'layers',
-        diff_ids: layerPaths.map((_, i) => `sha256:${'0'.repeat(64)}`),
+        diff_ids: diffIds,
       },
       history: [],
     };

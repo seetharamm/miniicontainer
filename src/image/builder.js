@@ -18,7 +18,7 @@ const chalk = require('chalk');
 const store        = require('../state/store');
 const { shortId }  = require('../utils/ids');
 const { pullImage } = require('./puller');
-const { IS_LINUX }  = require('../utils/platform');
+const { IS_LINUX, IS_MAC }  = require('../utils/platform');
 const { run }       = require('../utils/exec');
 
 // ------------------------------------------------------------------ build
@@ -115,12 +115,24 @@ async function buildImage(contextDir, tag) {
           // chroot into the rootfs so the command runs against the image's filesystem
           result = await run('chroot', [rootfs, '/bin/sh', '-c', args],
             { stdio: 'inherit' });
+        } else if (IS_MAC) {
+          // macOS cannot chroot into a Linux rootfs; run via the host shell with
+          // the rootfs as cwd so relative paths land inside the image.
+          console.log(chalk.yellow('  (non-Linux host: running on the host shell in the image rootfs, not chrooted)'));
+          const cwd = path.join(rootfs, meta.workdir || '/');
+          await fs.ensureDir(cwd);
+          const env = { ...process.env };
+          for (const kv of meta.env) {
+            const [k, ...rest] = kv.split('=');
+            env[k] = rest.join('=');
+          }
+          result = await run('/bin/sh', ['-c', args], { cwd, env, stdio: 'inherit' });
         } else {
           // Windows: run on host in contextDir (Linux binaries can't run on Windows)
           result = await run('cmd', ['/C', args], { cwd: contextDir, stdio: 'inherit' });
         }
         if (result.code !== 0) {
-          throw new Error(`RUN failed (exit ${result.code}): ${result.stderr}`);
+          throw new Error(`RUN failed (exit ${result.code}): ${result.stderr || ''}`);
         }
         break;
       }

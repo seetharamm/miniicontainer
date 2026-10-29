@@ -527,7 +527,8 @@ function attachCommand(program, def) {
     if (opt.required) {
       cmd.requiredOption(opt.flags, opt.description, coerce, opt.default);
     } else if (coerce !== undefined) {
-      cmd.option(opt.flags, opt.description, coerce, opt.default ?? []);
+      // Only collector options default to []; scalar coercers (parseInt) must stay unset
+      cmd.option(opt.flags, opt.description, coerce, opt.collect ? (opt.default ?? []) : opt.default);
     } else if (opt.default !== undefined) {
       cmd.option(opt.flags, opt.description, opt.default);
     } else {

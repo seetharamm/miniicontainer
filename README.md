@@ -70,6 +70,17 @@ test/
 > **Full Linux namespace isolation on Windows** requires WSL 2.  
 > Run `minicontainer` inside the WSL shell for the complete experience.
 
+### macOS (image tooling only)
+
+`npm install` then `node bin/minicontainer.js ...` works on macOS for `build`, `save`, `load`, `images`, etc.
+(`FROM scratch`, `COPY`, `ENV`, `CMD`, ...). Limitations:
+
+- `RUN` steps execute on the **host** via `/bin/sh -c` with the image rootfs as the working directory
+  (no chroot), so only host-compatible commands work and they are not isolated. Use `FROM scratch` or
+  keep `RUN` to simple file operations.
+- Running Linux containers (`run`, `exec`, namespaces, cgroups, networking) is not supported; use Linux or a Linux VM.
+- `save` writes real layer `diff_ids` but still labels images `linux/amd64`.
+
 ---
 
 ## Installation
